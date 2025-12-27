@@ -1258,40 +1258,40 @@
             const totalCashTWD = (otherCash.TWD || 0) + ((otherCash.USD || 0) * rateUsd);
             const totalLiabilitiesTWD = (liabilities.mortgage || 0) + (liabilities.loan || 0) + (liabilities.pledge || 0);
             
-            // --- Dashboard Updates ---
+            // --- Dashboard Updates (FIXED: Force integer display) ---
             
             // 1. Assets Distribution
-            safeSetText('dash-stock-value', formatMoney(data.totalValue));
-            safeSetText('dash-stock-cost', formatMoney(data.totalCost));
-            safeSetText('dash-cash-value', formatMoney(totalCashTWD));
+            safeSetText('dash-stock-value', formatMoney(data.totalValue, {maximumFractionDigits: 0}));
+            safeSetText('dash-stock-cost', formatMoney(data.totalCost, {maximumFractionDigits: 0}));
+            safeSetText('dash-cash-value', formatMoney(totalCashTWD, {maximumFractionDigits: 0}));
 
             // 3. Balance Sheet
             const totalAssets = data.totalValue + totalCashTWD;
-            safeSetText('dash-total-assets', formatMoney(totalAssets));
-            safeSetText('dash-liabilities', formatMoney(totalLiabilitiesTWD));
+            safeSetText('dash-total-assets', formatMoney(totalAssets, {maximumFractionDigits: 0}));
+            safeSetText('dash-liabilities', formatMoney(totalLiabilitiesTWD, {maximumFractionDigits: 0}));
 
             // 4. Net Worth
             const netWorth = totalAssets - totalLiabilitiesTWD;
-            safeSetText('dash-net-worth', formatMoney(netWorth));
+            safeSetText('dash-net-worth', formatMoney(netWorth, {maximumFractionDigits: 0}));
 
             // 2. Performance (PnL)
             const totalUnrealizedTWD = data.totalValue - data.totalCost; 
             const totalRealizedTWD = data.totalRealized;
             const totalCombinedPnL = totalUnrealizedTWD + totalRealizedTWD;
 
-            updatePnlElement('total-unrealized-pnl', totalUnrealizedTWD);
-            updatePnlElement('total-realized-pnl', totalRealizedTWD);
+            updatePnlElement('total-unrealized-pnl', totalUnrealizedTWD, {maximumFractionDigits: 0});
+            updatePnlElement('total-realized-pnl', totalRealizedTWD, {maximumFractionDigits: 0});
             updatePnlElement('total-combined-pnl', totalCombinedPnL, {maximumFractionDigits: 0});
 
-            // Analysis Stats
+            // Analysis Stats (FIXED: Force integer display for amounts)
             document.getElementById('stat-proto-val').textContent = (data.catPcts['原型'] * 100).toFixed(1) + '%';
-            document.getElementById('stat-proto-amt').textContent = formatMoney(data.categoryTotals['原型']);
+            document.getElementById('stat-proto-amt').textContent = formatMoney(data.categoryTotals['原型'], {maximumFractionDigits: 0});
             
             document.getElementById('stat-lev-val').textContent = (data.catPcts['槓桿'] * 100).toFixed(1) + '%';
-            document.getElementById('stat-lev-amt').textContent = formatMoney(data.categoryTotals['槓桿']);
+            document.getElementById('stat-lev-amt').textContent = formatMoney(data.categoryTotals['槓桿'], {maximumFractionDigits: 0});
             
             document.getElementById('stat-cash-val').textContent = (data.catPcts['類現金'] * 100).toFixed(1) + '%';
-            document.getElementById('stat-cash-amt').textContent = formatMoney(data.categoryTotals['類現金']);
+            document.getElementById('stat-cash-amt').textContent = formatMoney(data.categoryTotals['類現金'], {maximumFractionDigits: 0});
 
             document.getElementById('stat-beta').textContent = data.beta.toFixed(2);
 
@@ -1341,7 +1341,7 @@
                         <span class="font-mono text-gray-700">${formatMoney(p.currentPrice, {maximumFractionDigits: 2})}</span>
                     </td>
                     <td class="px-4 py-4 text-right font-mono font-medium text-gray-700">
-                        ${isHold ? formatMoney(p.marketValue) : '-'}
+                        ${isHold ? formatMoney(p.marketValue, {maximumFractionDigits: 0}) : '-'}
                     </td>
                     <td class="px-4 py-4 text-right text-gray-500 text-xs" title="${avgCostTooltip}">
                         ${isHold ? formatMoney(p.avgCost) : '-'}
