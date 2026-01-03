@@ -74,6 +74,28 @@
             color: #334155;
             border: 1px solid #cbd5e1;
         }
+
+        /* Bank Input Styles */
+        .bank-input {
+            border: 1px solid transparent;
+            background: transparent;
+            width: 100%;
+            text-align: right;
+            padding: 4px;
+            border-radius: 4px;
+            font-family: monospace;
+            transition: all 0.2s;
+        }
+        .bank-input:hover {
+            background: #f9fafb;
+            border-color: #e5e7eb;
+        }
+        .bank-input:focus {
+            background: #fff;
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
     </style>
 </head>
 <body class="text-gray-800 h-screen flex flex-col overflow-hidden">
@@ -92,6 +114,9 @@
                     </button>
                     <button onclick="switchTab('overview')" id="tab-btn-overview" class="tab-inactive px-2 md:px-3 py-5 text-sm font-medium transition-colors duration-150 whitespace-nowrap">
                         <i class="fa-solid fa-gauge-high mr-2"></i>資產總覽
+                    </button>
+                    <button onclick="switchTab('bank')" id="tab-btn-bank" class="tab-inactive px-2 md:px-3 py-5 text-sm font-medium transition-colors duration-150 whitespace-nowrap">
+                        <i class="fa-solid fa-building-columns mr-2"></i>銀行系統餘額
                     </button>
                 </div>
                 <div class="flex items-center space-x-2 md:space-x-4 ml-auto">
@@ -112,6 +137,7 @@
 
             <!-- Tab 1: Transactions -->
             <div id="view-transactions" class="block animate-fade-in">
+                <!-- ... existing transaction content ... -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Input Form -->
                     <div class="lg:col-span-1">
@@ -220,49 +246,48 @@
 
             <!-- Tab 2: Asset Overview -->
             <div id="view-overview" class="hidden animate-fade-in">
-                <!-- Exchange Rate Settings -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-6 items-center text-sm">
-                    <div class="flex justify-between items-center mb-3 w-full">
-                        <div class="font-bold text-gray-700 flex items-center">
-                            <i class="fa-solid fa-money-bill-transfer mr-2 text-blue-500"></i> 
-                            匯率設定 (USD/TWD)
-                        </div>
-                        <div class="flex bg-gray-100 rounded-lg p-1">
-                            <button onclick="setRateMode('manual')" id="mode-btn-manual" class="px-3 py-1 text-xs font-medium rounded-md transition-all">手動</button>
-                            <button onclick="setRateMode('auto')" id="mode-btn-auto" class="px-3 py-1 text-xs font-medium rounded-md transition-all">自動抓取</button>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-500 font-medium">USD 匯率</label>
-                            <input type="number" id="rate-usd" value="32.5" step="0.01" onchange="updateExchangeRate('USD', this.value)" class="w-24 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 focus:border-blue-500 p-1 text-right font-mono font-bold">
-                        </div>
-                        <div id="auto-rate-controls" class="hidden flex items-center gap-2">
-                            <button onclick="fetchRealTimeRate()" class="text-blue-600 hover:text-blue-800 text-xs flex items-center">
-                                <i id="icon-rate-refresh" class="fa-solid fa-rotate-right mr-1"></i> 立即更新
-                            </button>
-                            <span id="rate-last-updated" class="text-xs text-gray-400"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Manual Input Section -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                
+                <!-- Manual Input Section (Merged Exchange Rate) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-4">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-sm">
-                        <div class="font-bold text-gray-700 flex items-center mb-3">
-                            <i class="fa-solid fa-piggy-bank mr-2 text-yellow-500"></i> 其他類現金資產
+                        <!-- Header with Toggle -->
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="font-bold text-gray-700 flex items-center">
+                                <i class="fa-solid fa-piggy-bank mr-2 text-yellow-500"></i> 其他類現金 & 匯率
+                            </div>
+                            <div class="flex bg-gray-100 rounded-lg p-0.5">
+                                <button onclick="setRateMode('manual')" id="mode-btn-manual" class="px-2 py-0.5 text-xs font-medium rounded-md transition-all">手動</button>
+                                <button onclick="setRateMode('auto')" id="mode-btn-auto" class="px-2 py-0.5 text-xs font-medium rounded-md transition-all">自動</button>
+                            </div>
                         </div>
-                        <div class="space-y-2">
+                        
+                        <div class="space-y-3">
+                             <!-- Exchange Rate Row -->
+                            <div class="flex items-center justify-between bg-blue-50 p-2 rounded-lg border border-blue-100">
+                                <label class="text-blue-600 font-medium">USD 匯率</label>
+                                <div class="flex items-center gap-2">
+                                     <div id="auto-rate-controls" class="hidden">
+                                        <button onclick="fetchRealTimeRate()" class="text-blue-400 hover:text-blue-600 text-xs mr-1" title="立即更新">
+                                            <i id="icon-rate-refresh" class="fa-solid fa-rotate-right"></i>
+                                        </button>
+                                     </div>
+                                     <input type="number" id="rate-usd" value="32.5" step="0.01" onchange="updateExchangeRate('USD', this.value)" class="w-20 bg-white border border-blue-200 text-gray-900 text-sm rounded focus:ring-blue-500 focus:border-blue-500 p-1 text-right font-mono font-bold">
+                                </div>
+                            </div>
+                             <!-- Last Updated Text -->
+                             <div class="flex justify-end text-[10px] text-gray-400 -mt-2 mb-1" id="rate-last-updated"></div>
+
                             <div class="flex items-center justify-between">
-                                <label class="text-gray-500 font-medium">TWD</label>
-                                <input type="text" inputmode="decimal" id="cash-twd" value="0" onfocus="this.value = this.value.replace(/,/g, '')" onblur="formatInput(this)" class="w-32 bg-yellow-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-yellow-500 focus:border-yellow-500 p-1 text-right font-mono font-bold">
+                                <label class="text-gray-500 font-medium">TWD 總額</label>
+                                <input type="text" id="cash-twd" value="0" readonly class="w-32 bg-gray-100 border border-gray-300 text-gray-500 text-sm rounded focus:ring-yellow-500 focus:border-yellow-500 p-1 text-right font-mono font-bold cursor-not-allowed">
                             </div>
                             <div class="flex items-center justify-between">
-                                <label class="text-gray-500 font-medium">USD</label>
-                                <input type="text" inputmode="decimal" id="cash-usd" value="0" onfocus="this.value = this.value.replace(/,/g, '')" onblur="formatInput(this)" class="w-32 bg-yellow-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-yellow-500 focus:border-yellow-500 p-1 text-right font-mono font-bold">
+                                <label class="text-gray-500 font-medium">USD 總額</label>
+                                <input type="text" id="cash-usd" value="0" readonly class="w-32 bg-gray-100 border border-gray-300 text-gray-500 text-sm rounded focus:ring-yellow-500 focus:border-yellow-500 p-1 text-right font-mono font-bold cursor-not-allowed">
                             </div>
                         </div>
                     </div>
+                    
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-sm">
                         <div class="font-bold text-gray-700 flex items-center mb-3">
                             <i class="fa-solid fa-money-check-dollar mr-2 text-red-500"></i> 負債 (手動輸入 - TWD)
@@ -428,6 +453,54 @@
 
             </div>
 
+            <!-- Tab 3: Bank System Balance -->
+            <div id="view-bank" class="hidden animate-fade-in">
+                <!-- NEW: Top Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+                        <div class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">銀行總餘額 (USD)</div>
+                        <div class="text-2xl lg:text-3xl font-bold text-gray-800" id="bank-total-usd">--</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+                        <div class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">銀行總餘額 (TWD)</div>
+                        <div class="text-2xl lg:text-3xl font-bold text-gray-800" id="bank-total-twd">--</div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-700">
+                            <i class="fa-solid fa-building-columns text-blue-500 mr-2"></i>銀行系統餘額
+                        </h3>
+                         <div class="flex items-center gap-2">
+                             <span class="text-xs text-gray-400">修改數值後會自動同步至 Google Sheet</span>
+                             <button onclick="fetchDataFromGAS()" class="text-xs text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-md transition-colors flex items-center shadow-sm">
+                                <i class="fa-solid fa-rotate mr-1"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 w-1/4">銀行</th>
+                                    <th class="px-6 py-3 text-right w-1/4">USD</th>
+                                    <th class="px-6 py-3 text-right w-1/4">TWD</th>
+                                    <th class="px-6 py-3 text-right w-1/4">貸款 (TWD)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bank-list">
+                                <!-- JS will populate this -->
+                            </tbody>
+                        </table>
+                    </div>
+                     <div id="empty-state-bank" class="hidden p-10 text-center text-gray-400">
+                        <i class="fa-solid fa-piggy-bank text-4xl mb-3"></i>
+                        <p>尚無銀行資料，請先從 Google Sheet 讀取</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -490,7 +563,9 @@
                         <ul class="list-disc list-inside mt-1 ml-1 text-gray-500">
                             <li>讀取「股票交易紀錄」</li>
                             <li>讀取「即時價格與beta」</li>
+                            <li>讀取「銀行系統餘額」</li>
                             <li>寫入新交易紀錄</li>
+                            <li>更新銀行餘額</li>
                         </ul>
                     </div>
                     <input type="url" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5">
@@ -615,6 +690,7 @@
         let otherCash = JSON.parse(localStorage.getItem('my_other_cash')) || { TWD: 0, USD: 0 };
         let liabilities = JSON.parse(localStorage.getItem('my_liabilities')) || { mortgage: 0, loan: 0, pledge: 0 };
         let symbolBetas = JSON.parse(localStorage.getItem('my_symbol_betas')) || {}; 
+        let bankData = JSON.parse(localStorage.getItem('my_bank_data')) || []; // NEW
         
         let gasUrl = localStorage.getItem('my_gas_url') || '';         
         
@@ -636,18 +712,18 @@
             if(gasUrl) document.getElementById('gas-url').value = gasUrl;
             
             document.getElementById('rate-usd').value = exchangeRates['USD'];
-            // document.getElementById('auto-fetch-prices').checked = (rateMode === 'auto'); // Removed check
 
             setRateMode(rateMode);
 
             // Init manual cash inputs
             const cashTwdInput = document.getElementById('cash-twd');
             cashTwdInput.value = otherCash.TWD;
-            formatInput(cashTwdInput);
+            // Removed onblur from cash inputs as they are read-only
+            // formatInput(cashTwdInput); 
 
             const cashUsdInput = document.getElementById('cash-usd');
             cashUsdInput.value = otherCash.USD;
-            formatInput(cashUsdInput);
+            // formatInput(cashUsdInput);
 
             // Init liabilities inputs
             const liabMort = document.getElementById('liab-mortgage');
@@ -671,6 +747,7 @@
             }
 
             renderTransactions();
+            renderBankTable(); // Initial Render
         });
 
         // --- Beta Management ---
@@ -681,7 +758,7 @@
 
         // --- Navigation ---
         function switchTab(tabName) {
-            const tabs = ['transactions', 'overview'];
+            const tabs = ['transactions', 'overview', 'bank']; // Added bank
             tabs.forEach(t => {
                 const section = document.getElementById(`view-${t}`);
                 const btn = document.getElementById(`tab-btn-${t}`);
@@ -723,7 +800,7 @@
             showToast('GAS 網址已儲存');
         }
 
-        // --- Fetch Data from GAS (Transactions + Prices + Beta) ---
+        // --- Fetch Data from GAS (Transactions + Prices + Beta + Bank + Dashboard) ---
         async function fetchDataFromGAS(isSilent = false) {
             if (!gasUrl) {
                 if(!isSilent) showAlert('提示', '請先輸入 Google Apps Script 網址');
@@ -739,22 +816,20 @@
             }
 
             try {
+                // Fetch ALL types
                 const response = await fetch(gasUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP 錯誤 (${response.status})`);
                 }
                 const json = await response.json();
                 
-                // Handle potential GAS text output "Error: ..."
                 if (json.error) {
                     throw new Error(json.error);
                 }
 
                 if (!isSilent) {
-                    // Show debug info only for manual fetch
-                    // Check structure
-                    if (!json.transactions && !json.marketData) {
-                         showAlert('資料格式錯誤', '回傳的 JSON 缺少 transactions 或 marketData 欄位。請檢查 GAS 腳本。', json);
+                    if (!json.transactions && !json.marketData && !json.bankData && !json.dashboard) {
+                         showAlert('資料格式錯誤', 'JSON 格式不符，缺少必要欄位。', json);
                          return;
                     }
                 }
@@ -764,15 +839,29 @@
                     processGASTransactions(json.transactions);
                 }
 
-                // Process Market Data (Price + Beta)
+                // Process Market Data
                 if (json.marketData && Array.isArray(json.marketData)) {
                     processGASMarketData(json.marketData);
+                }
+
+                // Process Bank Data
+                if (json.bankData && Array.isArray(json.bankData)) {
+                    bankData = json.bankData;
+                    localStorage.setItem('my_bank_data', JSON.stringify(bankData));
+                    renderBankTable();
+                }
+
+                // Process Dashboard Data (Exchange Rate) - NEW
+                if (json.dashboard) {
+                    processGASDashboardData(json.dashboard);
                 }
                 
                 if (!isSilent) {
                     let msg = '資料同步成功！\n';
                     if(json.transactions) msg += `- 交易紀錄: ${json.transactions.length} 筆\n`;
-                    if(json.marketData) msg += `- 市場數據: ${json.marketData.length} 筆`;
+                    if(json.marketData) msg += `- 市場數據: ${json.marketData.length} 筆\n`;
+                    if(json.bankData) msg += `- 銀行資料: ${json.bankData.length} 筆\n`;
+                    if(json.dashboard && json.dashboard['匯率_USDTWD']) msg += `- 匯率更新: ${json.dashboard['匯率_USDTWD']}`;
                     
                     showToast(msg);
                     closeDataSyncModal();
@@ -791,30 +880,43 @@
             }
         }
 
+        // New function to handle Dashboard Data (Exchange Rate)
+        function processGASDashboardData(data) {
+            // Look for "匯率_USDTWD" key
+            if (data['匯率_USDTWD']) {
+                const rate = parseFloat(data['匯率_USDTWD']);
+                if (!isNaN(rate)) {
+                    exchangeRates['USD'] = rate;
+                    localStorage.setItem('my_exchange_rates', JSON.stringify(exchangeRates));
+                    
+                    // Update UI if in auto mode
+                    if (rateMode === 'auto') {
+                         document.getElementById('rate-usd').value = rate.toFixed(2);
+                         renderPortfolio();
+                    }
+                }
+            }
+        }
+
+        // ... processGASTransactions ...
         function processGASTransactions(data) {
              const newTransactions = [];
              data.forEach((row, index) => {
                 const id = Date.now() + index;
                 if(!row.date || !row.symbol) return;
-
-                // Handle Date (Fix UTC/Local Issue)
                 let dateIso = row.date;
                 if (typeof row.date === 'string' && row.date.indexOf('T') > -1) {
-                    // Convert to Date object
                     const d = new Date(row.date);
-                    // Format to local YYYY-MM-DD
                     const year = d.getFullYear();
                     const month = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
                     dateIso = `${year}-${month}-${day}`;
                 }
-
                 let action = 'BUY';
                 const actStr = String(row.action).toUpperCase();
                 if (actStr === '賣' || actStr === 'SELL' || actStr === 'S') {
                     action = 'SELL';
                 }
-
                 newTransactions.push({
                     id: id,
                     date: dateIso,
@@ -826,14 +928,12 @@
                     currency: row.currency || 'TWD'
                 });
              });
-
              transactions = newTransactions;
              saveData();
              renderTransactions();
         }
 
         function processGASMarketData(data) {
-            // Expects array of objects: { symbol, price, beta }
             data.forEach(item => {
                 const sym = String(item.symbol).toUpperCase();
                 if (item.price) {
@@ -843,19 +943,113 @@
                     symbolBetas[sym] = parseFloat(item.beta);
                 }
             });
-            
             localStorage.setItem('my_current_prices', JSON.stringify(currentPrices));
             localStorage.setItem('my_symbol_betas', JSON.stringify(symbolBetas));
             renderPortfolio();
         }
 
-        // --- Transaction Functions (ADD & WRITE) ---
+        // --- Bank Table Logic (NEW) ---
+        function renderBankTable() {
+            const list = document.getElementById('bank-list');
+            const emptyState = document.getElementById('empty-state-bank');
+            if(!list) return;
+
+            list.innerHTML = '';
+
+            // Calculate Totals for Top Cards (NEW)
+            const totalUSD = bankData.reduce((sum, item) => sum + (parseFloat(item.usd) || 0), 0);
+            const totalTWD = bankData.reduce((sum, item) => sum + (parseFloat(item.twd) || 0), 0);
+            
+            // Update Summary UI
+            safeSetText('bank-total-usd', formatMoney(totalUSD, {maximumFractionDigits: 0}));
+            safeSetText('bank-total-twd', formatMoney(totalTWD, {maximumFractionDigits: 0}));
+
+
+            if (bankData.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            bankData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50';
+                
+                // Helper to create input cells
+                const createInput = (field, value) => {
+                    // value is number, format it
+                    const displayVal = formatMoney(value, {maximumFractionDigits: 0}); 
+                    return `<input type="text" 
+                        class="bank-input" 
+                        value="${displayVal}" 
+                        onfocus="this.value = this.value.replace(/,/g, '')" 
+                        onblur="saveBankRow('${item.bank}', '${field}', this)"
+                    >`;
+                };
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-gray-800">${item.bank}</td>
+                    <td class="px-6 py-4">${createInput('usd', item.usd)}</td>
+                    <td class="px-6 py-4">${createInput('twd', item.twd)}</td>
+                    <td class="px-6 py-4 text-red-500">${createInput('loan', item.loan)}</td>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        // Triggered on blur of bank inputs
+        async function saveBankRow(bankName, field, inputElement) {
+            // 1. Format display
+            formatInput(inputElement);
+            const val = parseFloat(inputElement.value.replace(/,/g, ''));
+            
+            // 2. Update Local State
+            const bankItem = bankData.find(b => b.bank === bankName);
+            if (bankItem) {
+                // If value didn't change, do nothing
+                if (bankItem[field] === val) return; 
+                bankItem[field] = val;
+                localStorage.setItem('my_bank_data', JSON.stringify(bankData));
+                
+                // Refresh table to update totals immediately
+                renderBankTable();
+            }
+
+            // 3. Send to GAS (Optimistic: don't block UI)
+            if (gasUrl) {
+                showToast(`正在儲存 ${bankName}...`);
+                try {
+                    // Construct payload for specific bank update
+                    // We need to send full row data to be safe, or just the updated field?
+                    // The GAS script expects { type: 'updateBank', bank, usd, twd, loan }
+                    const payload = {
+                        type: 'updateBank',
+                        bank: bankItem.bank,
+                        usd: bankItem.usd,
+                        twd: bankItem.twd,
+                        loan: bankItem.loan
+                    };
+
+                    await fetch(gasUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                    showToast('儲存成功');
+                } catch (e) {
+                    console.error(e);
+                    showToast('儲存至雲端失敗，但已存於本地');
+                }
+            }
+        }
+
+
+        // --- Transaction Functions ---
         async function addTransaction(e) {
             e.preventDefault();
-            
             const submitBtn = document.getElementById('btn-add-submit');
             const loadingIcon = document.getElementById('icon-upload-loading');
-            
             const brokerSelect = document.getElementById('t-broker');
             const broker = brokerSelect.options[brokerSelect.selectedIndex].value;
 
@@ -870,18 +1064,14 @@
                 currency: document.getElementById('t-currency').value
             };
 
-            // 1. Optimistic Update
             transactions.push(newTx);
             saveData();
-            // We do NOT update current price locally on manual add anymore to prefer GAS source
             renderTransactions();
             
-            // Reset Form inputs
             document.getElementById('t-symbol').value = '';
             document.getElementById('t-qty').value = '';
             document.getElementById('t-price').value = '';
 
-            // 2. GAS Sync
             if (gasUrl) {
                 submitBtn.disabled = true;
                 loadingIcon.classList.remove('hidden');
@@ -927,22 +1117,17 @@
             const emptyState = document.getElementById('empty-state-tx');
 
             list.innerHTML = '';
-            
             const sortedTx = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
-
             if (sortedTx.length === 0) {
                 emptyState.classList.remove('hidden');
             } else {
                 emptyState.classList.add('hidden');
             }
-
             countSpan.textContent = `${sortedTx.length} 筆`;
-
             sortedTx.forEach(tx => {
                 const total = (tx.qty * tx.price).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
                 const actionColor = tx.action === 'BUY' ? 'bg-red-600 text-white' : 'bg-green-600 text-white';
                 const actionLabel = tx.action === 'BUY' ? '買入' : '賣出';
-
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-gray-50 transition-colors';
                 row.innerHTML = `
@@ -960,7 +1145,7 @@
             });
         }
 
-        // --- Exchange Rate Logic ---
+        // ... (Existing Exchange Rate Logic) ...
         function setRateMode(mode) {
             rateMode = mode;
             localStorage.setItem('my_rate_mode', mode);
@@ -990,51 +1175,57 @@
 
         async function fetchRealTimeRate() {
             if (rateMode !== 'auto') return;
+            
+            // Check if GAS URL exists
+            if (!gasUrl) {
+                showToast('請先設定 Google Apps Script 網址以讀取匯率');
+                return;
+            }
+
             const icon = document.getElementById('icon-rate-refresh');
             const label = document.getElementById('rate-last-updated');
             icon.classList.add('fa-spin');
             label.textContent = '更新中...';
 
-            const urls = [
-                'https://open.er-api.com/v6/latest/USD',
-                'https://api.exchangerate-api.com/v4/latest/USD'
-            ];
-
-            let success = false;
-
-            for (const url of urls) {
-                try {
-                    const res = await fetch(url);
-                    if (!res.ok) continue; 
+            try {
+                // Fetch from GAS with type=dashboard to get exchange rate
+                const response = await fetch(`${gasUrl}?type=dashboard`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const json = await response.json();
+                
+                // Check for dashboard data and specific key
+                if (json.dashboard && json.dashboard['匯率_USDTWD']) {
+                    const rate = parseFloat(json.dashboard['匯率_USDTWD']);
                     
-                    const data = await res.json();
-                    
-                    if (data && data.rates && data.rates.TWD) {
-                        let rate = data.rates.TWD;
-                        // FIX: Round to 2 decimals for consistency with UI
-                        rate = parseFloat(rate.toFixed(2));
-
+                    if (!isNaN(rate)) {
+                        // Update State
                         exchangeRates['USD'] = rate;
                         localStorage.setItem('my_exchange_rates', JSON.stringify(exchangeRates));
+                        
+                        // Update UI
                         document.getElementById('rate-usd').value = rate.toFixed(2);
                         
                         const now = new Date();
                         const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
                         label.textContent = `更新於 ${timeStr}`;
+                        
                         renderPortfolio();
-                        showToast(`匯率已更新: 1 USD = ${rate.toFixed(2)} TWD`);
-                        success = true;
-                        break; 
+                        showToast(`匯率已更新 (來自 Sheet): 1 USD = ${rate.toFixed(2)} TWD`);
+                    } else {
+                         throw new Error('匯率數值無效');
                     }
-                } catch (err) {
-                    console.warn(`Failed to fetch from ${url}`, err);
+                } else {
+                    throw new Error('Sheet 中找不到 "匯率_USDTWD"');
                 }
-            }
 
-            if (!success) {
+            } catch (error) {
+                console.error(error);
                 label.textContent = '更新失敗';
+                showToast('匯率更新失敗: ' + error.message);
+            } finally {
+                icon.classList.remove('fa-spin');
             }
-            icon.classList.remove('fa-spin');
         }
 
         function updateExchangeRate(currency, value) {
@@ -1194,13 +1385,23 @@
             
             // 1. Calculate Manual Cash Value in TWD
             const rateUsd = exchangeRates['USD'] || 1;
-            const manualCashTWD = (otherCash.TWD || 0) + ((otherCash.USD || 0) * rateUsd);
+            
+            // New: Bank Data cash sum
+            let bankCashTWD = 0;
+            if (bankData.length > 0) {
+                bankData.forEach(b => {
+                    bankCashTWD += (b.twd || 0) + ((b.usd || 0) * rateUsd);
+                });
+            } else {
+                 // Fallback to manual if no bank data
+                 bankCashTWD = (otherCash.TWD || 0) + ((otherCash.USD || 0) * rateUsd);
+            }
 
             // 2. Add to "類現金" Category Total (for Pie Chart)
-            categoryTotals['類現金'] += manualCashTWD;
+            categoryTotals['類現金'] += bankCashTWD;
 
             // 3. Calculate Total Assets (Stocks + Cash) for Beta Weighting
-            const totalAssetsValue = totalPortfolioValueTWD + manualCashTWD;
+            const totalAssetsValue = totalPortfolioValueTWD + bankCashTWD;
 
             // 4. Calculate Allocation % based on Stocks Only (for table display - optional, usually % of portfolio)
             // But for Beta, we need % of Total Assets
@@ -1244,7 +1445,8 @@
                 totalRealized: totalGlobalRealizedPnLTWD,
                 categoryTotals: categoryTotals,     // Includes Cash
                 catPcts: catPcts,                   // Includes Cash
-                beta: totalBeta                     // Diluted by Cash
+                beta: totalBeta,                    // Diluted by Cash
+                bankCashTWD: bankCashTWD // Export for render
             };
         }
 
@@ -1255,7 +1457,8 @@
 
             // --- Update Dashboard with Cash & Liabilities ---
             const rateUsd = exchangeRates['USD'] || 1;
-            const totalCashTWD = (otherCash.TWD || 0) + ((otherCash.USD || 0) * rateUsd);
+            // Use calculated bank cash from logic
+            const totalCashTWD = data.bankCashTWD;
             const totalLiabilitiesTWD = (liabilities.mortgage || 0) + (liabilities.loan || 0) + (liabilities.pledge || 0);
             
             // --- Dashboard Updates (FIXED: Force integer display) ---
@@ -1264,6 +1467,23 @@
             safeSetText('dash-stock-value', formatMoney(data.totalValue, {maximumFractionDigits: 0}));
             safeSetText('dash-stock-cost', formatMoney(data.totalCost, {maximumFractionDigits: 0}));
             safeSetText('dash-cash-value', formatMoney(totalCashTWD, {maximumFractionDigits: 0}));
+
+            // Update Cash Inputs (Read-only display)
+            // Calculate separate totals for display
+            let displayTWD = 0;
+            let displayUSD = 0;
+            if (bankData.length > 0) {
+                 bankData.forEach(b => {
+                     displayTWD += (b.twd || 0);
+                     displayUSD += (b.usd || 0);
+                 });
+            } else {
+                displayTWD = otherCash.TWD;
+                displayUSD = otherCash.USD;
+            }
+            document.getElementById('cash-twd').value = formatMoney(displayTWD, {maximumFractionDigits: 0});
+            document.getElementById('cash-usd').value = formatMoney(displayUSD, {maximumFractionDigits: 0});
+
 
             // 3. Balance Sheet
             const totalAssets = data.totalValue + totalCashTWD;
@@ -1297,6 +1517,9 @@
 
             updateAllocationChart(data.categoryTotals);
             
+            // Populate Beta Settings if we are in analysis view
+            // renderBetaSettings(); // Removed since manual beta input is removed
+
             list.innerHTML = '';
 
             if (data.items.length === 0) {
@@ -1535,11 +1758,14 @@
                 localStorage.removeItem('my_other_cash'); 
                 localStorage.removeItem('my_liabilities'); 
                 localStorage.removeItem('my_symbol_betas'); // Clear betas
+                localStorage.removeItem('my_bank_data');
                 transactions = [];
                 currentPrices = {};
                 symbolBetas = {};
+                bankData = [];
                 renderTransactions();
                 renderPortfolio();
+                renderBankTable();
                 showToast('所有資料已清除');
             });
         }
