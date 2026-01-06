@@ -118,10 +118,13 @@
                     <button onclick="switchTab('bank')" id="tab-btn-bank" class="tab-inactive px-2 md:px-3 py-5 text-sm font-medium transition-colors duration-150 whitespace-nowrap">
                         <i class="fa-solid fa-building-columns mr-2"></i>銀行系統餘額
                     </button>
+                    <button onclick="switchTab('pledge')" id="tab-btn-pledge" class="tab-inactive px-2 md:px-3 py-5 text-sm font-medium transition-colors duration-150 whitespace-nowrap">
+                        <i class="fa-solid fa-hand-holding-dollar mr-2"></i>股票質押
+                    </button>
                 </div>
                 <div class="flex items-center space-x-2 md:space-x-4 ml-auto">
                      <button onclick="openDataSyncModal()" class="text-blue-500 hover:text-blue-700 text-sm flex items-center bg-blue-50 px-3 py-2 rounded-lg transition-colors" title="連結 Google Sheet">
-                        <i class="fa-brands fa-google mr-1"></i> <span class="hidden sm:inline ml-1">讀取交易資料</span>
+                        <i class="fa-brands fa-google mr-1"></i> <span class="hidden sm:inline ml-1">讀取資料</span>
                     </button>
                     <button onclick="confirmClearAllData()" class="text-red-500 hover:text-red-700 text-sm px-2" title="清除所有資料">
                         <i class="fa-solid fa-trash"></i>
@@ -290,30 +293,26 @@
                     
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-sm">
                         <div class="font-bold text-gray-700 flex items-center mb-3">
-                            <i class="fa-solid fa-money-check-dollar mr-2 text-red-500"></i> 負債 (手動輸入 - TWD)
+                            <i class="fa-solid fa-money-check-dollar mr-2 text-red-500"></i> 負債 (TWD)
                         </div>
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
-                                <label class="text-gray-500 font-medium">房貸</label>
-                                <input type="text" inputmode="decimal" id="liab-mortgage" value="0" onfocus="this.value = this.value.replace(/,/g, '')" onblur="formatInput(this)" class="w-32 bg-red-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-red-500 focus:border-red-500 p-1 text-right font-mono font-bold">
+                                <label class="text-gray-500 font-medium">房貸 (台北富邦)</label>
+                                <input type="text" id="liab-mortgage" value="0" readonly class="w-32 bg-gray-100 border border-gray-300 text-gray-500 text-sm rounded focus:ring-red-500 focus:border-red-500 p-1 text-right font-mono font-bold cursor-not-allowed">
                             </div>
                             <div class="flex items-center justify-between">
-                                <label class="text-gray-500 font-medium">信貸</label>
-                                <input type="text" inputmode="decimal" id="liab-loan" value="0" onfocus="this.value = this.value.replace(/,/g, '')" onblur="formatInput(this)" class="w-32 bg-red-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-red-500 focus:border-red-500 p-1 text-right font-mono font-bold">
+                                <label class="text-gray-500 font-medium">信貸 (中國信託)</label>
+                                <input type="text" id="liab-loan" value="0" readonly class="w-32 bg-gray-100 border border-gray-300 text-gray-500 text-sm rounded focus:ring-red-500 focus:border-red-500 p-1 text-right font-mono font-bold cursor-not-allowed">
                             </div>
                             <div class="flex items-center justify-between">
-                                <label class="text-gray-500 font-medium">股票質押</label>
-                                <input type="text" inputmode="decimal" id="liab-pledge" value="0" onfocus="this.value = this.value.replace(/,/g, '')" onblur="formatInput(this)" class="w-32 bg-red-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-red-500 focus:border-red-500 p-1 text-right font-mono font-bold">
+                                <label class="text-gray-500 font-medium">股票質押 (自動計算)</label>
+                                <input type="text" id="liab-pledge" value="0" readonly class="w-32 bg-gray-100 border border-gray-300 text-gray-500 text-sm rounded focus:ring-red-500 focus:border-red-500 p-1 text-right font-mono font-bold cursor-not-allowed">
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="flex justify-end mb-6">
-                    <button onclick="saveManualAssetsAndRecalculate()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition-colors shadow-sm flex items-center">
-                        <i class="fa-solid fa-calculator mr-2"></i> 確認並重新計算
-                    </button>
-                </div>
+                <!-- Removed Confirm Button (Auto calculated now) -->
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
@@ -501,6 +500,122 @@
                 </div>
             </div>
 
+            <!-- Tab 4: Stock Pledge (NEW) -->
+            <div id="view-pledge" class="hidden animate-fade-in">
+                <!-- Pledge Top Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+                        <div class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">總借款金額</div>
+                        <div class="text-2xl lg:text-3xl font-bold text-red-600" id="pledge-total-loan">--</div>
+                        <div class="text-xs text-gray-400 mt-1">TWD</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+                        <div class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">整戶維持率</div>
+                        <div class="text-2xl lg:text-3xl font-bold" id="pledge-overall-ratio">--</div>
+                        <div class="text-xs text-gray-400 mt-1">安全 > 166%</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Pledge Input -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-6">
+                            <h2 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                                <i class="fa-solid fa-hand-holding-dollar text-blue-500 mr-2"></i> 新增質借紀錄
+                            </h2>
+                            <form id="pledgeForm" onsubmit="addPledgeTransaction(event)" class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">匯撥日期</label>
+                                        <input type="date" id="p-transfer-date" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">匯入券商</label>
+                                        <select id="p-broker" class="w-full border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                            <option value="元大證金">元大證金</option>
+                                            <option value="群益證券">群益證券</option>
+                                            <option value="富邦證券">富邦證券</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">匯撥標的</label>
+                                        <input type="text" id="p-symbol" placeholder="2330" required onchange="calculatePledgeCollateral()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">匯撥股數</label>
+                                        <input type="number" id="p-qty" required onchange="calculatePledgeCollateral()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1">擔保價值 (自動計算)</label>
+                                    <input type="text" id="p-collateral" readonly class="w-full bg-gray-100 border border-gray-300 text-gray-500 text-sm rounded-lg block p-2.5 font-mono font-bold">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">借款日期</label>
+                                        <input type="date" id="p-loan-date" required onchange="calculateRepaymentDate()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">借款金額</label>
+                                        <input type="number" id="p-loan-amount" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">質借利率 (%)</label>
+                                        <input type="number" id="p-rate" step="0.01" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">還款日期</label>
+                                        <input type="date" id="p-repay-date" readonly class="w-full bg-gray-100 border border-gray-300 text-gray-500 text-sm rounded-lg block p-2.5">
+                                    </div>
+                                </div>
+                                <button type="submit" id="btn-pledge-submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition-all flex justify-center items-center">
+                                    <span>新增質押紀錄</span>
+                                    <i id="icon-pledge-loading" class="fa-solid fa-circle-notch fa-spin ml-2 hidden"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Pledge List -->
+                    <div class="lg:col-span-2">
+                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                <h3 class="font-bold text-gray-700">質押紀錄明細</h3>
+                            </div>
+                            <div class="overflow-x-auto flex-1">
+                                <table class="w-full text-sm text-left text-gray-500">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 shadow-sm z-10">
+                                        <tr>
+                                            <th scope="col" class="px-4 py-3">匯撥日</th>
+                                            <th scope="col" class="px-4 py-3">標的</th>
+                                            <th scope="col" class="px-4 py-3 text-right">股數</th>
+                                            <th scope="col" class="px-4 py-3 text-right">擔保價值</th>
+                                            <th scope="col" class="px-4 py-3">借款日</th>
+                                            <th scope="col" class="px-4 py-3 text-right">借款金額</th>
+                                            <th scope="col" class="px-4 py-3 text-right">利率</th>
+                                            <th scope="col" class="px-4 py-3">還款日</th>
+                                            <th scope="col" class="px-4 py-3 text-right">利息</th>
+                                            <th scope="col" class="px-4 py-3 text-right">維持率</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pledge-list">
+                                        <!-- JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="empty-state-pledge" class="hidden p-10 text-center text-gray-400">
+                                <i class="fa-solid fa-file-invoice-dollar text-4xl mb-3"></i>
+                                <p>目前沒有質押紀錄</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -564,8 +679,8 @@
                             <li>讀取「股票交易紀錄」</li>
                             <li>讀取「即時價格與beta」</li>
                             <li>讀取「銀行系統餘額」</li>
-                            <li>寫入新交易紀錄</li>
-                            <li>更新銀行餘額</li>
+                            <li>讀取「質押借貸資料」</li>
+                            <li>寫入交易、質押資料與更新銀行餘額</li>
                         </ul>
                     </div>
                     <input type="url" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5">
@@ -690,7 +805,8 @@
         let otherCash = JSON.parse(localStorage.getItem('my_other_cash')) || { TWD: 0, USD: 0 };
         let liabilities = JSON.parse(localStorage.getItem('my_liabilities')) || { mortgage: 0, loan: 0, pledge: 0 };
         let symbolBetas = JSON.parse(localStorage.getItem('my_symbol_betas')) || {}; 
-        let bankData = JSON.parse(localStorage.getItem('my_bank_data')) || []; // NEW
+        let bankData = JSON.parse(localStorage.getItem('my_bank_data')) || []; 
+        let pledgeData = JSON.parse(localStorage.getItem('my_pledge_data')) || []; // NEW
         
         let gasUrl = localStorage.getItem('my_gas_url') || '';         
         
@@ -736,7 +852,7 @@
             
             const liabPledge = document.getElementById('liab-pledge');
             liabPledge.value = liabilities.pledge;
-            formatInput(liabPledge);
+            // formatInput(liabPledge); // Pledge is now read-only
 
             updateBrokerStyle(document.getElementById('t-broker'));
             updateActionStyle(document.getElementById('t-action'));
@@ -748,6 +864,7 @@
 
             renderTransactions();
             renderBankTable(); // Initial Render
+            renderPledgeTable(); // Initial Render
         });
 
         // --- Beta Management ---
@@ -758,7 +875,7 @@
 
         // --- Navigation ---
         function switchTab(tabName) {
-            const tabs = ['transactions', 'overview', 'bank']; // Added bank
+            const tabs = ['transactions', 'overview', 'bank', 'pledge']; // Added pledge
             tabs.forEach(t => {
                 const section = document.getElementById(`view-${t}`);
                 const btn = document.getElementById(`tab-btn-${t}`);
@@ -800,7 +917,7 @@
             showToast('GAS 網址已儲存');
         }
 
-        // --- Fetch Data from GAS (Transactions + Prices + Beta + Bank + Dashboard) ---
+        // --- Fetch Data from GAS ---
         async function fetchDataFromGAS(isSilent = false) {
             if (!gasUrl) {
                 if(!isSilent) showAlert('提示', '請先輸入 Google Apps Script 網址');
@@ -828,7 +945,7 @@
                 }
 
                 if (!isSilent) {
-                    if (!json.transactions && !json.marketData && !json.bankData && !json.dashboard) {
+                    if (!json.transactions && !json.marketData && !json.bankData && !json.dashboard && !json.pledgeData) {
                          showAlert('資料格式錯誤', 'JSON 格式不符，缺少必要欄位。', json);
                          return;
                     }
@@ -851,9 +968,14 @@
                     renderBankTable();
                 }
 
-                // Process Dashboard Data (Exchange Rate) - NEW
+                // Process Dashboard Data
                 if (json.dashboard) {
                     processGASDashboardData(json.dashboard);
+                }
+
+                // Process Pledge Data (NEW)
+                if (json.pledgeData && Array.isArray(json.pledgeData)) {
+                    processGASPledgeData(json.pledgeData);
                 }
                 
                 if (!isSilent) {
@@ -861,6 +983,7 @@
                     if(json.transactions) msg += `- 交易紀錄: ${json.transactions.length} 筆\n`;
                     if(json.marketData) msg += `- 市場數據: ${json.marketData.length} 筆\n`;
                     if(json.bankData) msg += `- 銀行資料: ${json.bankData.length} 筆\n`;
+                    if(json.pledgeData) msg += `- 質押紀錄: ${json.pledgeData.length} 筆\n`;
                     if(json.dashboard && json.dashboard['匯率_USDTWD']) msg += `- 匯率更新: ${json.dashboard['匯率_USDTWD']}`;
                     
                     showToast(msg);
@@ -882,14 +1005,12 @@
 
         // New function to handle Dashboard Data (Exchange Rate)
         function processGASDashboardData(data) {
-            // Look for "匯率_USDTWD" key
             if (data['匯率_USDTWD']) {
                 const rate = parseFloat(data['匯率_USDTWD']);
                 if (!isNaN(rate)) {
                     exchangeRates['USD'] = rate;
                     localStorage.setItem('my_exchange_rates', JSON.stringify(exchangeRates));
                     
-                    // Update UI if in auto mode
                     if (rateMode === 'auto') {
                          document.getElementById('rate-usd').value = rate.toFixed(2);
                          renderPortfolio();
@@ -948,7 +1069,54 @@
             renderPortfolio();
         }
 
-        // --- Bank Table Logic (NEW) ---
+        function processGASPledgeData(data) {
+            const newPledge = [];
+            data.forEach((row, index) => {
+                let dateIso = row.transferDate;
+                if (typeof row.transferDate === 'string' && row.transferDate.indexOf('T') > -1) {
+                    const d = new Date(row.transferDate);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    dateIso = `${year}-${month}-${day}`;
+                }
+                
+                let loanDateIso = row.loanDate;
+                if (typeof row.loanDate === 'string' && row.loanDate.indexOf('T') > -1) {
+                    const d = new Date(row.loanDate);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    loanDateIso = `${year}-${month}-${day}`;
+                }
+
+                 let repayDateIso = row.repaymentDate;
+                if (typeof row.repaymentDate === 'string' && row.repaymentDate.indexOf('T') > -1) {
+                    const d = new Date(row.repaymentDate);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    repayDateIso = `${year}-${month}-${day}`;
+                }
+
+                newPledge.push({
+                    transferDate: dateIso,
+                    symbol: row.symbol,
+                    qty: row.qty,
+                    broker: row.broker,
+                    collateralValue: row.collateralValue,
+                    loanDate: loanDateIso,
+                    loanAmount: row.loanAmount,
+                    rate: row.rate,
+                    repaymentDate: repayDateIso
+                });
+            });
+            pledgeData = newPledge;
+            localStorage.setItem('my_pledge_data', JSON.stringify(pledgeData));
+            renderPledgeTable();
+        }
+
+        // --- Bank Table Logic ---
         function renderBankTable() {
             const list = document.getElementById('bank-list');
             const emptyState = document.getElementById('empty-state-bank');
@@ -956,11 +1124,9 @@
 
             list.innerHTML = '';
 
-            // Calculate Totals for Top Cards (NEW)
             const totalUSD = bankData.reduce((sum, item) => sum + (parseFloat(item.usd) || 0), 0);
             const totalTWD = bankData.reduce((sum, item) => sum + (parseFloat(item.twd) || 0), 0);
             
-            // Update Summary UI
             safeSetText('bank-total-usd', formatMoney(totalUSD, {maximumFractionDigits: 0}));
             safeSetText('bank-total-twd', formatMoney(totalTWD, {maximumFractionDigits: 0}));
 
@@ -975,9 +1141,7 @@
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-gray-50';
                 
-                // Helper to create input cells
                 const createInput = (field, value) => {
-                    // value is number, format it
                     const displayVal = formatMoney(value, {maximumFractionDigits: 0}); 
                     return `<input type="text" 
                         class="bank-input" 
@@ -997,31 +1161,21 @@
             });
         }
 
-        // Triggered on blur of bank inputs
         async function saveBankRow(bankName, field, inputElement) {
-            // 1. Format display
             formatInput(inputElement);
             const val = parseFloat(inputElement.value.replace(/,/g, ''));
             
-            // 2. Update Local State
             const bankItem = bankData.find(b => b.bank === bankName);
             if (bankItem) {
-                // If value didn't change, do nothing
                 if (bankItem[field] === val) return; 
                 bankItem[field] = val;
                 localStorage.setItem('my_bank_data', JSON.stringify(bankData));
-                
-                // Refresh table to update totals immediately
                 renderBankTable();
             }
 
-            // 3. Send to GAS (Optimistic: don't block UI)
             if (gasUrl) {
                 showToast(`正在儲存 ${bankName}...`);
                 try {
-                    // Construct payload for specific bank update
-                    // We need to send full row data to be safe, or just the updated field?
-                    // The GAS script expects { type: 'updateBank', bank, usd, twd, loan }
                     const payload = {
                         type: 'updateBank',
                         bank: bankItem.bank,
@@ -1042,6 +1196,183 @@
                     showToast('儲存至雲端失敗，但已存於本地');
                 }
             }
+        }
+
+        // --- Pledge Logic (NEW) ---
+        function calculatePledgeCollateral() {
+            const symbol = document.getElementById('p-symbol').value.toUpperCase();
+            const qty = parseFloat(document.getElementById('p-qty').value);
+            const collateralInput = document.getElementById('p-collateral');
+            
+            if (symbol && qty && currentPrices[symbol]) {
+                const val = Math.round(qty * currentPrices[symbol]);
+                collateralInput.value = formatMoney(val, {maximumFractionDigits: 0});
+            } else {
+                collateralInput.value = '';
+            }
+        }
+
+        function calculateRepaymentDate() {
+            const loanDateVal = document.getElementById('p-loan-date').value;
+            const repayInput = document.getElementById('p-repay-date');
+            
+            if (loanDateVal) {
+                const date = new Date(loanDateVal);
+                // Add 6 months
+                date.setMonth(date.getMonth() + 6);
+                // Subtract 1 day
+                date.setDate(date.getDate() - 1);
+                
+                repayInput.valueAsDate = date;
+            }
+        }
+
+        async function addPledgeTransaction(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-pledge-submit');
+            const icon = document.getElementById('icon-pledge-loading');
+            
+            // Get values
+            const transferDate = document.getElementById('p-transfer-date').value;
+            const symbol = document.getElementById('p-symbol').value.toUpperCase();
+            const qty = parseFloat(document.getElementById('p-qty').value);
+            const broker = document.getElementById('p-broker').value;
+            // Recalc collateral to be safe
+            const collateralValue = Math.round(qty * (currentPrices[symbol] || 0)); 
+            const loanDate = document.getElementById('p-loan-date').value;
+            const loanAmount = parseFloat(document.getElementById('p-loan-amount').value);
+            // Convert rate to decimal 0.0248 to store in sheet, user inputs 2.48
+            const rate = parseFloat(document.getElementById('p-rate').value) / 100;
+            const repaymentDate = document.getElementById('p-repay-date').value;
+            const interest = 0; // Placeholder
+
+            const newPledge = {
+                transferDate, symbol, qty, broker, collateralValue, 
+                loanDate, loanAmount, rate, repaymentDate, interest
+            };
+
+            // Local Update
+            pledgeData.push(newPledge);
+            localStorage.setItem('my_pledge_data', JSON.stringify(pledgeData));
+            renderPledgeTable();
+
+            // Clear Form
+            document.getElementById('p-symbol').value = '';
+            document.getElementById('p-qty').value = '';
+            document.getElementById('p-collateral').value = '';
+            document.getElementById('p-loan-amount').value = '';
+            document.getElementById('p-rate').value = '';
+
+            // GAS Sync
+            if (gasUrl) {
+                btn.disabled = true;
+                icon.classList.remove('hidden');
+                try {
+                    const payload = {
+                        type: 'addPledge',
+                        ...newPledge
+                    };
+                    await fetch(gasUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                    showToast('質押紀錄已新增並發送至 Google Sheet');
+                } catch (error) {
+                    console.error(error);
+                    showAlert('寫入失敗', '寫入失敗，但已儲存至本地。');
+                } finally {
+                    btn.disabled = false;
+                    icon.classList.add('hidden');
+                }
+            } else {
+                showToast('已新增至本地');
+            }
+        }
+
+        function renderPledgeTable() {
+            const list = document.getElementById('pledge-list');
+            const empty = document.getElementById('empty-state-pledge');
+            if(!list) return;
+
+            list.innerHTML = '';
+            
+            // Calculate Total Loan and Total Collateral for Maintenance Ratio
+            let totalLoanAmount = 0;
+            let totalCollateralValue = 0;
+
+            pledgeData.forEach(p => {
+                totalLoanAmount += parseFloat(p.loanAmount) || 0;
+                // Use current price for real-time collateral value
+                const currentPrice = currentPrices[p.symbol] || 0;
+                totalCollateralValue += (parseFloat(p.qty) || 0) * currentPrice;
+            });
+            
+            // Calculate Overall Ratio
+            let overallRatio = 0;
+            if (totalLoanAmount > 0) {
+                overallRatio = (totalCollateralValue / totalLoanAmount) * 100;
+            }
+            
+            // Update Pledge Summary Cards
+            safeSetText('pledge-total-loan', formatMoney(totalLoanAmount, {maximumFractionDigits: 0}));
+            const ratioEl = document.getElementById('pledge-overall-ratio');
+            if(ratioEl) {
+                ratioEl.textContent = overallRatio.toFixed(2) + '%';
+                // Color coding for overall ratio
+                ratioEl.className = "text-2xl lg:text-3xl font-bold " + (overallRatio < 130 ? "text-red-600" : (overallRatio < 166 ? "text-yellow-600" : "text-green-600"));
+            }
+
+            if (pledgeData.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            pledgeData.forEach(p => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50';
+                
+                // Format Rate (0.0248 -> 2.48%)
+                const rateVal = parseFloat(p.rate);
+                let displayRateVal = rateVal;
+                if(rateVal < 0.5) displayRateVal = rateVal * 100;
+                
+                // Calculate Interest
+                const loanDate = new Date(p.loanDate);
+                const today = new Date();
+                const diffTime = today - loanDate;
+                const diffDays = diffTime > 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0;
+                const decimalRate = rateVal > 0.5 ? rateVal / 100 : rateVal;
+                const interest = Math.round(p.loanAmount * decimalRate * (diffDays / 365));
+
+                // Maintenance Ratio (Item level)
+                const currentPrice = currentPrices[p.symbol] || 0;
+                const currentCollateral = p.qty * currentPrice;
+                let maintenanceRatio = 0;
+                if(p.loanAmount > 0) {
+                     maintenanceRatio = (currentCollateral / p.loanAmount) * 100;
+                }
+                
+                let ratioClass = "text-green-600 font-bold";
+                if(maintenanceRatio < 130) ratioClass = "text-red-600 font-bold";
+                else if(maintenanceRatio < 140) ratioClass = "text-yellow-600 font-bold";
+
+                row.innerHTML = `
+                    <td class="px-4 py-3">${p.transferDate}</td>
+                    <td class="px-4 py-3 font-bold">${p.symbol}</td>
+                    <td class="px-4 py-3 text-right">${formatNumber(p.qty)}</td>
+                    <td class="px-4 py-3 text-right">${formatMoney(currentCollateral, {maximumFractionDigits: 0})}</td>
+                    <td class="px-4 py-3">${p.loanDate}</td>
+                    <td class="px-4 py-3 text-right text-red-600 font-bold">${formatMoney(p.loanAmount, {maximumFractionDigits: 0})}</td>
+                    <td class="px-4 py-3 text-right">${displayRateVal.toFixed(2)}%</td>
+                    <td class="px-4 py-3 text-gray-500">${p.repaymentDate}</td>
+                    <td class="px-4 py-3 text-right">${formatMoney(interest, {maximumFractionDigits: 0})}</td>
+                    <td class="px-4 py-3 text-right ${ratioClass}">${maintenanceRatio.toFixed(2)}%</td>
+                `;
+                list.appendChild(row);
+            });
         }
 
 
@@ -1175,57 +1506,35 @@
 
         async function fetchRealTimeRate() {
             if (rateMode !== 'auto') return;
-            
-            // Check if GAS URL exists
-            if (!gasUrl) {
-                showToast('請先設定 Google Apps Script 網址以讀取匯率');
-                return;
-            }
-
             const icon = document.getElementById('icon-rate-refresh');
             const label = document.getElementById('rate-last-updated');
             icon.classList.add('fa-spin');
             label.textContent = '更新中...';
-
-            try {
-                // Fetch from GAS with type=dashboard to get exchange rate
-                const response = await fetch(`${gasUrl}?type=dashboard`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                
-                const json = await response.json();
-                
-                // Check for dashboard data and specific key
-                if (json.dashboard && json.dashboard['匯率_USDTWD']) {
-                    const rate = parseFloat(json.dashboard['匯率_USDTWD']);
-                    
-                    if (!isNaN(rate)) {
-                        // Update State
+            const urls = ['https://open.er-api.com/v6/latest/USD','https://api.exchangerate-api.com/v4/latest/USD'];
+            let success = false;
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) continue; 
+                    const data = await res.json();
+                    if (data && data.rates && data.rates.TWD) {
+                        let rate = data.rates.TWD;
+                        rate = parseFloat(rate.toFixed(2));
                         exchangeRates['USD'] = rate;
                         localStorage.setItem('my_exchange_rates', JSON.stringify(exchangeRates));
-                        
-                        // Update UI
                         document.getElementById('rate-usd').value = rate.toFixed(2);
-                        
                         const now = new Date();
                         const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
                         label.textContent = `更新於 ${timeStr}`;
-                        
                         renderPortfolio();
-                        showToast(`匯率已更新 (來自 Sheet): 1 USD = ${rate.toFixed(2)} TWD`);
-                    } else {
-                         throw new Error('匯率數值無效');
+                        showToast(`匯率已更新: 1 USD = ${rate.toFixed(2)} TWD`);
+                        success = true;
+                        break; 
                     }
-                } else {
-                    throw new Error('Sheet 中找不到 "匯率_USDTWD"');
-                }
-
-            } catch (error) {
-                console.error(error);
-                label.textContent = '更新失敗';
-                showToast('匯率更新失敗: ' + error.message);
-            } finally {
-                icon.classList.remove('fa-spin');
+                } catch (err) { console.warn(`Failed to fetch from ${url}`, err); }
             }
+            if (!success) label.textContent = '更新失敗';
+            icon.classList.remove('fa-spin');
         }
 
         function updateExchangeRate(currency, value) {
@@ -1237,99 +1546,47 @@
             renderPortfolio(); 
         }
 
-        // New function to handle manual inputs save and recalc
-        function saveManualAssetsAndRecalculate() {
-            // Read values
-            const cashTwd = parseFloat(document.getElementById('cash-twd').value.replace(/,/g, '')) || 0;
-            const cashUsd = parseFloat(document.getElementById('cash-usd').value.replace(/,/g, '')) || 0;
-            
-            const mort = parseFloat(document.getElementById('liab-mortgage').value.replace(/,/g, '')) || 0;
-            const loan = parseFloat(document.getElementById('liab-loan').value.replace(/,/g, '')) || 0;
-            const pledge = parseFloat(document.getElementById('liab-pledge').value.replace(/,/g, '')) || 0;
+        // REMOVED: saveManualAssetsAndRecalculate() - Assets now automated
 
-            // Update State
-            otherCash.TWD = cashTwd;
-            otherCash.USD = cashUsd;
-            liabilities.mortgage = mort;
-            liabilities.loan = loan;
-            liabilities.pledge = pledge;
-
-            // Save to Storage
-            localStorage.setItem('my_other_cash', JSON.stringify(otherCash));
-            localStorage.setItem('my_liabilities', JSON.stringify(liabilities));
-
-            // Re-render
-            renderPortfolio();
-            showToast('手動資產與負債數據已更新');
-        }
-        
         function toggleSoldOutRows() {
             isSoldOutExpanded = !isSoldOutExpanded;
             renderPortfolio();
         }
 
-        // --- Portfolio Logic ---
         function calculatePortfolioData() {
             const portfolio = {};
             let totalPortfolioValueTWD = 0; 
             let totalInvestedCostTWD = 0;
             let totalGlobalRealizedPnLTWD = 0;
 
-            const categoryTotals = {
-                '原型': 0,
-                '槓桿': 0,
-                '類現金': 0,
-                '其他': 0
-            };
-
+            const categoryTotals = { '原型': 0, '槓桿': 0, '類現金': 0, '其他': 0 };
             const sortedTx = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
 
             sortedTx.forEach(tx => {
                 if (!portfolio[tx.symbol]) {
-                    // Assign beta here
                     const symbolBeta = getBeta(tx.symbol);
                     const category = getCategoryFromBeta(symbolBeta);
-
                     portfolio[tx.symbol] = {
-                        symbol: tx.symbol,
-                        currency: tx.currency,
-                        beta: symbolBeta,
-                        category: category,
-                        inventory: 0,
-                        totalCost: 0, 
-                        totalBuyQty: 0,
-                        totalBuyAmt: 0, 
-                        soldQty: 0,
-                        realizedPnL: 0,
-                        avgCost: 0
+                        symbol: tx.symbol, currency: tx.currency, beta: symbolBeta, category: category,
+                        inventory: 0, totalCost: 0, totalBuyQty: 0, totalBuyAmt: 0, soldQty: 0, realizedPnL: 0, avgCost: 0
                     };
                 }
-                
                 const p = portfolio[tx.symbol];
-
                 if (tx.action === 'BUY') {
                     p.inventory += tx.qty;
                     p.totalCost += (tx.qty * tx.price);
                     p.totalBuyQty += tx.qty;
                     p.totalBuyAmt += (tx.qty * tx.price);
-                    if (p.inventory > 0) {
-                        p.avgCost = p.totalCost / p.inventory;
-                    }
+                    if (p.inventory > 0) p.avgCost = p.totalCost / p.inventory;
                 } else if (tx.action === 'SELL') {
                     const costBasis = p.avgCost * tx.qty;
                     const revenue = tx.price * tx.qty;
                     const profit = revenue - costBasis;
-
                     p.realizedPnL += profit;
                     p.inventory -= tx.qty;
                     p.totalCost -= costBasis;
                     p.soldQty += tx.qty;
-
-                    if (p.inventory <= 0.000001) {
-                        p.inventory = 0;
-                        p.totalCost = 0;
-                        p.avgCost = 0; 
-                    }
+                    if (p.inventory <= 0.000001) { p.inventory = 0; p.totalCost = 0; p.avgCost = 0; }
                 }
             });
 
@@ -1339,51 +1596,29 @@
                      const lastTx = transactions.filter(t => t.symbol === p.symbol).sort((a,b) => b.id - a.id)[0];
                      currentPrice = lastTx ? lastTx.price : 0;
                 }
-
                 const marketValue = p.inventory * currentPrice;
                 const unrealizedPnL = marketValue - p.totalCost;
                 const roi = p.totalCost > 0 ? (unrealizedPnL / p.totalCost) * 100 : 0;
-                
                 const rate = exchangeRates[p.currency] || 1;
                 const marketValueTWD = marketValue * rate;
-                
-                // Calculate Unrealized PnL in TWD
                 const unrealizedPnLTWD = unrealizedPnL * rate;
-                
-                // Tooltip Info (Original Currency)
                 const tooltipInfo = `${formatMoney(unrealizedPnL)} ${p.currency} x ${rate} = ${formatMoney(unrealizedPnLTWD)}`;
-
-                // Re-check beta in case manual update changed it
+                
                 p.beta = getBeta(p.symbol);
                 p.category = getCategoryFromBeta(p.beta);
 
                 if(p.inventory > 0) {
                     totalPortfolioValueTWD += marketValueTWD;
                     totalInvestedCostTWD += (p.totalCost * rate);
-                    if(categoryTotals[p.category] !== undefined) {
-                        categoryTotals[p.category] += marketValueTWD;
-                    } else {
-                        categoryTotals['其他'] += marketValueTWD;
-                    }
+                    if(categoryTotals[p.category] !== undefined) categoryTotals[p.category] += marketValueTWD;
+                    else categoryTotals['其他'] += marketValueTWD;
                 }
-                
                 totalGlobalRealizedPnLTWD += (p.realizedPnL * rate);
 
-                return {
-                    ...p,
-                    currentPrice,
-                    marketValue,
-                    unrealizedPnL,
-                    unrealizedPnLTWD, 
-                    tooltipInfo,
-                    roi,
-                    marketValueTWD 
-                };
+                return { ...p, currentPrice, marketValue, unrealizedPnL, unrealizedPnLTWD, tooltipInfo, roi, marketValueTWD };
             });
 
-            // --- FIX START: Include Manual Cash in Beta & Category Calculations ---
-            
-            // 1. Calculate Manual Cash Value in TWD
+            // Calculate manual cash & bank cash
             const rateUsd = exchangeRates['USD'] || 1;
             
             // New: Bank Data cash sum
@@ -1397,30 +1632,14 @@
                  bankCashTWD = (otherCash.TWD || 0) + ((otherCash.USD || 0) * rateUsd);
             }
 
-            // 2. Add to "類現金" Category Total (for Pie Chart)
             categoryTotals['類現金'] += bankCashTWD;
-
-            // 3. Calculate Total Assets (Stocks + Cash) for Beta Weighting
             const totalAssetsValue = totalPortfolioValueTWD + bankCashTWD;
 
-            // 4. Calculate Allocation % based on Stocks Only (for table display - optional, usually % of portfolio)
-            // But for Beta, we need % of Total Assets
-            
-            // Let's update allocation in table to be % of Stock Portfolio (or Total? usually Total is better)
-            // Sticking to % of Stock Portfolio for the table column "占比" to sum to 100% of stocks is common,
-            // BUT for Beta, we MUST use totalAssets.
-            
             result.forEach(p => {
-                // Table allocation: stick to % of Stock Portfolio for now to avoid confusion or change to Total?
-                // Let's keep table allocation as % of Stock Portfolio for consistency with "Stock Holdings" table.
                 p.allocation = totalPortfolioValueTWD > 0 ? (p.marketValueTWD / totalPortfolioValueTWD) * 100 : 0;
             });
-
             result.sort((a, b) => b.allocation - a.allocation);
 
-            // 5. Calculate Weighted Beta
-            // Beta = Sum ( (AssetValue / TotalAssets) * AssetBeta )
-            // Cash Beta is 0, so we just add 0. The dilution happens because denominator increases.
             let totalBeta = 0;
             result.forEach(p => {
                 if (p.inventory > 0) {
@@ -1429,23 +1648,21 @@
                 }
             });
 
-            // 6. Recalculate Category Percentages for Stats Display (using Total Assets)
             const catPcts = {
                 '原型': totalAssetsValue > 0 ? categoryTotals['原型'] / totalAssetsValue : 0,
                 '槓桿': totalAssetsValue > 0 ? categoryTotals['槓桿'] / totalAssetsValue : 0,
                 '類現金': totalAssetsValue > 0 ? categoryTotals['類現金'] / totalAssetsValue : 0,
                 '其他': totalAssetsValue > 0 ? categoryTotals['其他'] / totalAssetsValue : 0,
             };
-            // --- FIX END ---
 
             return { 
                 items: result, 
-                totalValue: totalPortfolioValueTWD, // Stock Value Only (for dashboard separation)
+                totalValue: totalPortfolioValueTWD, 
                 totalCost: totalInvestedCostTWD,
                 totalRealized: totalGlobalRealizedPnLTWD,
-                categoryTotals: categoryTotals,     // Includes Cash
-                catPcts: catPcts,                   // Includes Cash
-                beta: totalBeta,                    // Diluted by Cash
+                categoryTotals: categoryTotals, 
+                catPcts: catPcts, 
+                beta: totalBeta,
                 bankCashTWD: bankCashTWD // Export for render
             };
         }
@@ -1455,11 +1672,27 @@
             const list = document.getElementById('portfolio-list');
             const emptyState = document.getElementById('empty-state-pf');
 
-            // --- Update Dashboard with Cash & Liabilities ---
             const rateUsd = exchangeRates['USD'] || 1;
             // Use calculated bank cash from logic
             const totalCashTWD = data.bankCashTWD;
-            const totalLiabilitiesTWD = (liabilities.mortgage || 0) + (liabilities.loan || 0) + (liabilities.pledge || 0);
+            
+            // Calculate Liabilities from Bank Data for specific banks
+            let bankMortgage = 0;
+            let bankCreditLoan = 0;
+            
+            if (bankData.length > 0) {
+                const fubon = bankData.find(b => b.bank === '台北富邦');
+                if (fubon) bankMortgage = parseFloat(fubon.loan) || 0;
+                
+                const ctbc = bankData.find(b => b.bank === '中國信託');
+                if (ctbc) bankCreditLoan = parseFloat(ctbc.loan) || 0;
+            }
+            
+            // Calculate Pledge Loan Total from Pledge Data
+            const totalPledgeLoan = pledgeData.reduce((sum, p) => sum + (parseFloat(p.loanAmount) || 0), 0);
+            
+            // Total Liabilities Sum
+            const totalLiabilitiesTWD = bankMortgage + bankCreditLoan + totalPledgeLoan;
             
             // --- Dashboard Updates (FIXED: Force integer display) ---
             
@@ -1484,6 +1717,10 @@
             document.getElementById('cash-twd').value = formatMoney(displayTWD, {maximumFractionDigits: 0});
             document.getElementById('cash-usd').value = formatMoney(displayUSD, {maximumFractionDigits: 0});
 
+            // Update Liability Inputs (Read-only for all)
+            document.getElementById('liab-mortgage').value = formatMoney(bankMortgage, {maximumFractionDigits: 0});
+            document.getElementById('liab-loan').value = formatMoney(bankCreditLoan, {maximumFractionDigits: 0});
+            document.getElementById('liab-pledge').value = formatMoney(totalPledgeLoan, {maximumFractionDigits: 0});
 
             // 3. Balance Sheet
             const totalAssets = data.totalValue + totalCashTWD;
@@ -1517,9 +1754,6 @@
 
             updateAllocationChart(data.categoryTotals);
             
-            // Populate Beta Settings if we are in analysis view
-            // renderBetaSettings(); // Removed since manual beta input is removed
-
             list.innerHTML = '';
 
             if (data.items.length === 0) {
@@ -1598,7 +1832,6 @@
 
                 if (isSoldOutExpanded) {
                     soldItems.forEach(p => {
-                        // For sold items, most values are 0 or not applicable, show realized PnL mainly
                         const realizedClass = getColorClass(p.realizedPnL);
                         const catColor = CATEGORY_COLORS[p.category] || '#9ca3af';
 
@@ -1628,68 +1861,45 @@
                 }
             }
         }
-
-        // Restored updateAllocationChart function
+        
+        // ... (Chart and Utility functions remain same) ...
         function updateAllocationChart(totals) {
             const ctx = document.getElementById('allocationChart').getContext('2d');
             const labels = ['原型', '槓桿', '類現金', '其他'];
             const dataValues = labels.map(l => totals[l]);
             const colors = labels.map(l => CATEGORY_COLORS[l]);
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            // Check if there is data to display
+            if (chartInstance) chartInstance.destroy();
             if (Object.values(totals).reduce((a, b) => a + b, 0) === 0) return;
-
-            // Custom Plugin to draw lines and labels outside the pie chart
             const pieLabelsLinePlugin = {
                 id: 'pieLabelsLine',
                 afterDraw(chart) {
                     const { ctx, chartArea: { width, height } } = chart;
-                    
                     chart.data.datasets.forEach((dataset, i) => {
                         chart.getDatasetMeta(i).data.forEach((datapoint, index) => {
                             const value = dataset.data[index];
                             if (value <= 0) return;
-
                             const { x, y } = datapoint.tooltipPosition();
-                            
-                            // Center of the chart
                             const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
                             const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
-                            
-                            // Calculate angle
                             const angle = Math.atan2(y - centerY, x - centerX);
-                            
-                            // Radius for the line start and end
                             const outerRadius = datapoint.outerRadius;
                             const lineStartRadius = outerRadius;
-                            const lineEndRadius = outerRadius + 20; // Length of the line outward
-                            
-                            // Calculate points
+                            const lineEndRadius = outerRadius + 20; 
                             const xStart = centerX + Math.cos(angle) * lineStartRadius;
                             const yStart = centerY + Math.sin(angle) * lineStartRadius;
                             const xEnd = centerX + Math.cos(angle) * lineEndRadius;
                             const yEnd = centerY + Math.sin(angle) * lineEndRadius;
-                            
-                            // Draw Line
                             ctx.beginPath();
                             ctx.moveTo(xStart, yStart);
                             ctx.lineTo(xEnd, yEnd);
-                            // Draw horizontal line based on side
                             const isRight = xEnd > centerX;
                             const xText = isRight ? xEnd + 10 : xEnd - 10;
                             ctx.lineTo(xText, yEnd);
                             ctx.strokeStyle = '#666';
                             ctx.stroke();
-                            
-                            // Draw Text
                             const total = dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = ((value / total) * 100).toFixed(1) + '%';
                             const labelText = `${chart.data.labels[index]} ${percentage}`;
-                            
                             ctx.font = '11px Arial';
                             ctx.fillStyle = '#333';
                             ctx.textAlign = isRight ? 'left' : 'right';
@@ -1699,50 +1909,20 @@
                     });
                 }
             };
-
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dataValues,
-                        backgroundColor: colors,
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: {
-                        padding: 40 // Add padding for external labels
-                    },
-                    plugins: {
-                        legend: {
-                            display: false 
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const val = context.raw;
-                                    const total = context.chart._metasets[context.datasetIndex].total;
-                                    const pct = ((val / total) * 100).toFixed(1) + '%';
-                                    return `${context.label}: ${formatMoney(val)} (${pct})`;
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [pieLabelsLinePlugin] // Register the custom plugin here
+                data: { labels: labels, datasets: [{ data: dataValues, backgroundColor: colors, borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, layout: { padding: 40 }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { const val = context.raw; const total = context.chart._metasets[context.datasetIndex].total; const pct = ((val / total) * 100).toFixed(1) + '%'; return `${context.label}: ${formatMoney(val)} (${pct})`; } } } } },
+                plugins: [pieLabelsLinePlugin]
             });
         }
-
+        // ... (Rest of utilities) ...
         function updatePrice(symbol, newPrice) {
             currentPrices[symbol] = parseFloat(newPrice);
             localStorage.setItem('my_current_prices', JSON.stringify(currentPrices));
             renderPortfolio(); 
         }
 
-        // --- Utilities ---
         function saveData() {
             localStorage.setItem('my_transactions', JSON.stringify(transactions));
         }
@@ -1759,13 +1939,16 @@
                 localStorage.removeItem('my_liabilities'); 
                 localStorage.removeItem('my_symbol_betas'); // Clear betas
                 localStorage.removeItem('my_bank_data');
+                localStorage.removeItem('my_pledge_data');
                 transactions = [];
                 currentPrices = {};
                 symbolBetas = {};
                 bankData = [];
+                pledgeData = [];
                 renderTransactions();
                 renderPortfolio();
                 renderBankTable();
+                renderPledgeTable();
                 showToast('所有資料已清除');
             });
         }
@@ -1773,7 +1956,7 @@
         function formatMoney(num, options) {
             if (num === undefined || num === null) return '0';
             const defaultOptions = {minimumFractionDigits: 0, maximumFractionDigits: 2};
-            const finalOptions = { ...defaultOptions, ...options }; // Merge user options
+            const finalOptions = { ...defaultOptions, ...options };
             return num.toLocaleString(undefined, finalOptions);
         }
 
@@ -1794,7 +1977,6 @@
             document.body.appendChild(div);
             setTimeout(() => div.remove(), 3000);
         }
-
     </script>
 </body>
 </html>
